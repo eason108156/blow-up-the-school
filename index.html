@@ -3,123 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>臺北市立明德國民中學 3D 校園探索</title>
+    <title>臺北市立明德國民中學 - 實景還原 3D 校園</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-        html, body { width: 100%; height: 100%; overflow: hidden; background-color: #0f172a; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif; }
+        html, body { width: 100%; height: 100%; overflow: hidden; background-color: #0b132b; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft JhengHei", sans-serif; }
         #webgl-canvas { width: 100%; height: 100%; display: block; }
 
         /* 準心 */
         #crosshair {
             position: absolute; top: 50%; left: 50%;
-            width: 10px; height: 10px;
-            border: 2px solid rgba(255, 255, 255, 0.85);
+            width: 8px; height: 8px; border: 2px solid rgba(255, 255, 255, 0.85);
             border-radius: 50%; transform: translate(-50%, -50%);
             pointer-events: none; z-index: 5;
         }
 
         /* 抬頭顯示 (HUD) */
         #hud {
-            position: absolute; top: 25px; left: 25px;
-            color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+            position: absolute; top: 20px; left: 20px;
+            color: #ffffff; text-shadow: 0 2px 6px rgba(0,0,0,0.85);
             pointer-events: none; z-index: 5;
         }
-        .school-name { font-size: 26px; font-weight: 800; color: #facc15; letter-spacing: 2px; }
+        .school-name { font-size: 24px; font-weight: 800; color: #facc15; letter-spacing: 1.5px; }
+        .school-desc { font-size: 13px; color: #94a3b8; margin-top: 2px; }
         .badge-counter {
-            font-size: 16px; margin-top: 8px; background: rgba(15, 23, 42, 0.75);
-            backdrop-filter: blur(6px); padding: 8px 18px; border-radius: 20px;
+            font-size: 15px; margin-top: 8px; background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px); padding: 6px 16px; border-radius: 20px;
             border-left: 4px solid #38bdf8; width: fit-content;
         }
 
-        /* 小地圖 (Minimap) */
+        /* 衛星雷達小地圖 (Minimap) */
         #minimap-wrapper {
-            position: absolute; top: 25px; right: 25px;
-            width: 150px; height: 150px;
-            background: rgba(15, 23, 42, 0.85);
-            border: 2px solid #38bdf8; border-radius: 50%;
+            position: absolute; top: 20px; right: 20px;
+            width: 160px; height: 160px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 2px solid #38bdf8; border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.6);
             overflow: hidden; pointer-events: none; z-index: 5;
         }
         #minimap { width: 100%; height: 100%; }
 
-        /* 功能快捷鍵與全螢幕按鈕 */
         #fullscreen-btn {
-            position: absolute; bottom: 25px; right: 25px;
-            background: rgba(15, 23, 42, 0.8); color: #fff;
-            border: 1px solid rgba(255,255,255,0.2); padding: 10px 18px;
-            border-radius: 8px; font-size: 14px; cursor: pointer; z-index: 5;
-            backdrop-filter: blur(4px); transition: all 0.2s ease;
+            position: absolute; bottom: 20px; right: 20px;
+            background: rgba(15, 23, 42, 0.85); color: #fff;
+            border: 1px solid rgba(255,255,255,0.2); padding: 8px 16px;
+            border-radius: 8px; font-size: 13px; cursor: pointer; z-index: 5;
+            backdrop-filter: blur(4px);
         }
         #fullscreen-btn:hover { background: #38bdf8; color: #000; }
 
-        /* 啟動選單 / 遮罩 */
+        /* 啟動選單 */
         #overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(8px);
+            background: rgba(11, 19, 43, 0.85); backdrop-filter: blur(8px);
             display: flex; justify-content: center; align-items: center;
             z-index: 20; color: #fff;
         }
         #menu-card {
             background: rgba(30, 41, 59, 0.95); border: 1px solid rgba(255,255,255,0.15);
-            padding: 40px; border-radius: 20px; max-width: 520px; text-align: center;
+            padding: 35px 45px; border-radius: 20px; max-width: 520px; text-align: center;
             box-shadow: 0 15px 40px rgba(0,0,0,0.6);
         }
-        #menu-card h1 { font-size: 32px; color: #facc15; margin-bottom: 15px; }
-        #menu-card p { font-size: 15px; color: #cbd5e1; line-height: 1.8; margin-bottom: 8px; }
-        .tag { background: #475569; color: #fff; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+        #menu-card h1 { font-size: 28px; color: #facc15; margin-bottom: 12px; }
+        #menu-card p { font-size: 14px; color: #cbd5e1; line-height: 1.8; margin-bottom: 8px; }
+        .tag { background: #475569; color: #fff; padding: 2px 7px; border-radius: 4px; font-weight: bold; }
         
-        #start-game-btn {
-            margin-top: 25px; padding: 14px 45px; font-size: 18px; font-weight: bold;
+        #start-btn {
+            margin-top: 20px; padding: 12px 40px; font-size: 17px; font-weight: bold;
             color: #0f172a; background: #22c55e; border: none; border-radius: 30px;
             cursor: pointer; box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
-            transition: all 0.2s ease;
         }
-        #start-game-btn:hover { background: #16a34a; color: #fff; transform: translateY(-2px); }
+        #start-btn:hover { background: #16a34a; color: #fff; }
 
-        /* 通關結算畫面 */
         #victory-card {
             display: none; position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%); background: rgba(15, 23, 42, 0.95);
             padding: 35px 50px; border-radius: 20px; border: 2px solid #facc15;
             text-align: center; z-index: 50; color: #fff;
-            box-shadow: 0 0 50px rgba(250, 204, 21, 0.5);
         }
     </style>
-    <!-- Three.js CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
     <div id="crosshair"></div>
 
     <div id="hud">
-        <div class="school-name">臺北市立明德國民中學 3D</div>
+        <div class="school-name">臺北市立明德國民中學</div>
+        <div class="school-desc">北投區明德路50號 ｜ 依真實 Google 衛星幾何配置還原</div>
         <div class="badge-counter">校徽寶石收集進度：<span id="collected-text">0</span> / 5</div>
     </div>
 
     <div id="minimap-wrapper">
-        <canvas id="minimap" width="150" height="150"></canvas>
+        <canvas id="minimap" width="160" height="160"></canvas>
     </div>
 
     <button id="fullscreen-btn">切換全螢幕 ⛶</button>
 
-    <!-- 開始遊戲視窗 -->
     <div id="overlay">
         <div id="menu-card">
-            <h1>🏫 明德國中 校園冒險</h1>
-            <p>GitHub Pages 原生架構已就緒，支援真・第一人稱滑鼠視角！</p>
+            <h1>🏫 明德國中 實景模擬</h1>
+            <p>已根據 Google Earth 衛星航測重塑校舍結構與操場尺度！</p>
             <p><span class="tag">W</span> <span class="tag">A</span> <span class="tag">S</span> <span class="tag">D</span>：走動控制</p>
             <p><span class="tag">滑鼠滑動</span>：360° 自由環顧校園</p>
             <p><span class="tag">Space</span>：跳躍 ｜ <span class="tag">Shift</span>：跑步衝刺</p>
-            <p style="margin-top: 15px; color: #38bdf8;">🎯 任務：探索明德路校門、榕園合院、PU操場、籃球場與體育館，收集 5 枚金色明德校徽！</p>
-            <button id="start-game-btn">點擊進入校園</button>
+            <p style="margin-top: 15px; color: #38bdf8;">🎯 地標巡禮：明德路校門、行政樓穿堂、四維樓合院、活動中心、PU操場司令台</p>
+            <button id="start-btn">進入 3D 校園</button>
         </div>
     </div>
 
-    <!-- 勝利視窗 -->
     <div id="victory-card">
-        <h2 style="color: #facc15; font-size: 28px; margin-bottom: 10px;">🎉 恭喜！探索成功！</h2>
-        <p>你已成功收集齊全臺北市立明德國中的所有榮譽校徽！</p>
-        <button onclick="location.reload()" style="margin-top: 18px; padding: 10px 24px; border: none; border-radius: 20px; background: #22c55e; color: #fff; font-weight: bold; cursor: pointer;">再次遊玩</button>
+        <h2 style="color: #facc15; font-size: 26px; margin-bottom: 10px;">🎉 探索完成！</h2>
+        <p>你已走遍明德國中主要地標並收集所有榮譽校徽！</p>
+        <button onclick="location.reload()" style="margin-top: 15px; padding: 10px 24px; border: none; border-radius: 20px; background: #22c55e; color: #fff; font-weight: bold; cursor: pointer;">再次遊玩</button>
     </div>
 
     <div id="webgl-canvas"></div>
@@ -139,7 +133,7 @@
         const badges = [];
         let collectedCount = 0;
 
-        // 原生音效
+        // 音效引擎
         let audioCtx = null;
         function playChime() {
             try {
@@ -159,7 +153,6 @@
             } catch(e) {}
         }
 
-        // 初始化
         window.addEventListener('DOMContentLoaded', () => {
             initScene();
             setupControls();
@@ -169,23 +162,31 @@
         function initScene() {
             const container = document.getElementById('webgl-canvas');
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x7ec8e3);
-            scene.fog = new THREE.FogExp2(0x7ec8e3, 0.007);
+            scene.background = new THREE.Color(0x87ceeb); // 台北晴空
+            scene.fog = new THREE.FogExp2(0x87ceeb, 0.006);
 
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(65, window.innerWidth / window.innerHeight, 0.1, 1000);
             pitchObject.add(camera);
-            yawObject.position.set(0, 1.7, 65); // 明德路校門口
+            // 玩家出生點：明德路大門口外側人行道
+            yawObject.position.set(0, 1.7, 78);
             yawObject.add(pitchObject);
             scene.add(yawObject);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
-            scene.add(ambientLight);
+            // 環境光與定向日光
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.6);
+            scene.add(hemiLight);
 
-            const sun = new THREE.DirectionalLight(0xfffaed, 0.85);
-            sun.position.set(60, 100, 40);
+            const sun = new THREE.DirectionalLight(0xfffaed, 0.9);
+            sun.position.set(70, 120, 50);
             sun.castShadow = true;
             sun.shadow.mapSize.width = 2048;
             sun.shadow.mapSize.height = 2048;
+            sun.shadow.camera.near = 0.5;
+            sun.shadow.camera.far = 400;
+            sun.shadow.camera.left = -100;
+            sun.shadow.camera.right = 100;
+            sun.shadow.camera.top = 100;
+            sun.shadow.camera.bottom = -100;
             scene.add(sun);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -194,143 +195,278 @@
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             container.appendChild(renderer.domElement);
 
-            buildEnvironment();
-            buildMingdeBuildings();
+            buildSatelliteEnvironment();
+            buildMingdeRealisticCampus();
             spawnBadges();
 
             window.addEventListener('resize', onWindowResize);
         }
 
-        function createSignTexture() {
+        /* ================= 衛星圖層與材質紋理 ================= */
+        // 跑道線紋理
+        function createTrackTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 1024; canvas.height = 256;
+            canvas.width = 1024; canvas.height = 1024;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#1e40af'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.lineWidth = 14; ctx.strokeStyle = '#ffffff'; ctx.strokeRect(7, 7, canvas.width - 14, canvas.height - 14);
-            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 85px "Microsoft JhengHei", sans-serif';
-            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-            ctx.fillText('臺北市立明德國民中學', canvas.width / 2, canvas.height / 2);
+            ctx.fillStyle = '#b91c1c'; // PU 紅色跑道
+            ctx.fillRect(0, 0, 1024, 1024);
+
+            // 白色跑道分道線
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 6; i++) {
+                const inset = 30 + i * 22;
+                ctx.beginPath();
+                ctx.roundRect(inset, inset, 1024 - inset * 2, 1024 - inset * 2, 280);
+                ctx.stroke();
+            }
+
+            // 內圈足球草坪
+            ctx.fillStyle = '#15803d';
+            ctx.beginPath();
+            ctx.roundRect(180, 180, 1024 - 360, 1024 - 360, 200);
+            ctx.fill();
+
+            // 足球場白線與中圈
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(220, 260, 584, 504);
+            ctx.beginPath();
+            ctx.arc(512, 512, 60, 0, Math.PI * 2);
+            ctx.moveTo(220, 512); ctx.lineTo(804, 512);
+            ctx.stroke();
+
             return new THREE.CanvasTexture(canvas);
         }
 
-        function createWallTexture() {
+        // 教學大樓修澤蘭風格立面紋理（水平窗帶與遮陽線條）
+        function createModernSchoolWallTexture() {
             const canvas = document.createElement('canvas');
             canvas.width = 512; canvas.height = 512;
             const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#f1f5f9'; ctx.fillRect(0, 0, 512, 512);
-            for (let y = 35; y < 512; y += 120) {
-                for (let x = 30; x < 512; x += 115) {
-                    ctx.fillStyle = '#334155'; ctx.fillRect(x, y, 75, 65);
-                    ctx.fillStyle = '#60a5fa'; ctx.fillRect(x + 4, y + 4, 32, 57); ctx.fillRect(x + 39, y + 4, 32, 57);
+            ctx.fillStyle = '#e2e8f0'; // 洗石子灰白基調
+            ctx.fillRect(0, 0, 512, 512);
+
+            // 水平遮陽板與窗帶
+            for (let y = 20; y < 512; y += 128) {
+                ctx.fillStyle = '#0f172a'; // 窗框深色
+                ctx.fillRect(20, y + 25, 472, 65);
+                ctx.fillStyle = '#38bdf8'; // 藍色玻璃
+                for (let x = 25; x < 490; x += 55) {
+                    ctx.fillRect(x, y + 30, 48, 55);
                 }
+                // 水平突出遮陽水泥樑
+                ctx.fillStyle = '#cbd5e1';
+                ctx.fillRect(10, y + 15, 492, 12);
             }
             const texture = new THREE.CanvasTexture(canvas);
             texture.wrapS = THREE.RepeatWrapping; texture.wrapT = THREE.RepeatWrapping;
             return texture;
         }
 
-        function buildEnvironment() {
-            // 草坪地表
-            const ground = new THREE.Mesh(new THREE.PlaneGeometry(260, 260), new THREE.MeshLambertMaterial({ color: 0x4ade80 }));
+        // 活動中心外牆（淺紅抿石子 + 彩色線條）
+        function createGymWallTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#e57373'; // 標誌性粉紅石子色
+            ctx.fillRect(0, 0, 512, 512);
+            // 彩色馬賽克跳色橫紋
+            const colors = ['#f59e0b', '#3b82f6', '#10b981', '#ec4899'];
+            colors.forEach((c, idx) => {
+                ctx.fillStyle = c;
+                ctx.fillRect(0, 320 + idx * 25, 512, 12);
+            });
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createSignboardTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#1e3a8a'; ctx.fillRect(0, 0, 1024, 256);
+            ctx.lineWidth = 14; ctx.strokeStyle = '#ffffff'; ctx.strokeRect(7, 7, 1010, 242);
+            ctx.fillStyle = '#ffffff'; ctx.font = 'bold 80px "Microsoft JhengHei", sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText('臺北市立明德國民中學', 512, 128);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        /* ================= 依照衛星幾何建立真實校園 ================= */
+        function buildSatelliteEnvironment() {
+            // 校園總基地 (約 200m x 200m)
+            const ground = new THREE.Mesh(new THREE.PlaneGeometry(240, 240), new THREE.MeshLambertMaterial({ color: 0x86efac }));
             ground.rotation.x = -Math.PI / 2;
             ground.receiveShadow = true;
             scene.add(ground);
 
-            // 北投／陽明山系
-            const mMat = new THREE.MeshLambertMaterial({ color: 0x15803d });
-            for (let i = -2; i <= 2; i++) {
-                const m = new THREE.Mesh(new THREE.ConeGeometry(75, 65, 6), mMat);
-                m.position.set(i * 68, 22, -140);
+            // 南側：明德路柏油道路與斑馬線 (Z: 75 ~ 115)
+            const road = new THREE.Mesh(new THREE.PlaneGeometry(240, 30), new THREE.MeshLambertMaterial({ color: 0x334155 }));
+            road.rotation.x = -Math.PI / 2;
+            road.position.set(0, 0.05, 90);
+            road.receiveShadow = true;
+            scene.add(road);
+
+            // 明德路黃色雙黃線
+            const roadLine = new THREE.Mesh(new THREE.PlaneGeometry(240, 0.6), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+            roadLine.rotation.x = -Math.PI / 2;
+            roadLine.position.set(0, 0.08, 90);
+            scene.add(roadLine);
+
+            // 人行道紅磚道
+            const sidewalk = new THREE.Mesh(new THREE.PlaneGeometry(240, 5), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+            sidewalk.rotation.x = -Math.PI / 2;
+            sidewalk.position.set(0, 0.1, 74);
+            scene.add(sidewalk);
+
+            // 北側陽明山/大屯山遠山地貌
+            const mountainMat = new THREE.MeshLambertMaterial({ color: 0x166534 });
+            for (let i = -3; i <= 3; i++) {
+                const m = new THREE.Mesh(new THREE.ConeGeometry(85, 75, 7), mountainMat);
+                m.position.set(i * 55, 25, -150);
                 scene.add(m);
             }
 
-            // 四周圍牆
-            createWall(-85, 0, 2, 170); createWall(85, 0, 2, 170);
-            createWall(0, -85, 170, 2); createWall(-48, 75, 75, 2); createWall(48, 75, 75, 2);
+            // 邊界校牆圍籬
+            createPerimeterWall(-75, 0, 2, 150); // 西邊牆 (致遠二路側)
+            createPerimeterWall(75, 0, 2, 150);  // 東邊牆 (明德路巷弄)
+            createPerimeterWall(0, -75, 150, 2); // 北後牆
+            createPerimeterWall(-42, 72, 64, 2); // 南大門左側牆
+            createPerimeterWall(42, 72, 64, 2);  // 南大門右側牆
         }
 
-        function createWall(x, z, w, d) {
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 3, d), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
-            mesh.position.set(x, 1.5, z);
+        function createPerimeterWall(x, z, w, d) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, 3.2, d), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+            mesh.position.set(x, 1.6, z);
             scene.add(mesh);
             colliders.push({ minX: x - w/2, maxX: x + w/2, minZ: z - d/2, maxZ: z + d/2 });
         }
 
-        function buildMingdeBuildings() {
-            const wallTexture = createWallTexture();
-            wallTexture.repeat.set(3, 2);
-            const buildingMat = new THREE.MeshLambertMaterial({ map: wallTexture });
+        function buildMingdeRealisticCampus() {
+            const wallTexture = createModernSchoolWallTexture();
+            wallTexture.repeat.set(4, 2);
+            const mainBuildingMat = new THREE.MeshLambertMaterial({ map: wallTexture });
+            const roofMat = new THREE.MeshLambertMaterial({ color: 0x64748b });
 
-            // 1. 明德路主校門
-            const colMat = new THREE.MeshLambertMaterial({ color: 0x475569 });
-            const col1 = new THREE.Mesh(new THREE.BoxGeometry(2, 6, 2), colMat); col1.position.set(-8, 3, 75);
-            const col2 = new THREE.Mesh(new THREE.BoxGeometry(2, 6, 2), colMat); col2.position.set(8, 3, 75);
-            scene.add(col1); scene.add(col2);
+            // 1. 南面主校門 (明德路50號正門)
+            const gateColMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+            const colL = new THREE.Mesh(new THREE.BoxGeometry(2, 6.5, 2), gateColMat); colL.position.set(-8, 3.25, 72);
+            const colR = new THREE.Mesh(new THREE.BoxGeometry(2, 6.5, 2), gateColMat); colR.position.set(8, 3.25, 72);
+            scene.add(colL); scene.add(colR);
 
-            const beam = new THREE.Mesh(new THREE.BoxGeometry(18, 2, 2.5), colMat);
-            beam.position.set(0, 6, 75); scene.add(beam);
+            const gateBeam = new THREE.Mesh(new THREE.BoxGeometry(18, 2, 2.5), gateColMat);
+            gateBeam.position.set(0, 6.5, 72); scene.add(gateBeam);
 
-            const sign = new THREE.Mesh(new THREE.PlaneGeometry(12, 2), new THREE.MeshBasicMaterial({ map: createSignTexture() }));
-            sign.position.set(0, 6, 76.3); scene.add(sign);
+            const sign = new THREE.Mesh(new THREE.PlaneGeometry(12, 2), new THREE.MeshBasicMaterial({ map: createSignboardTexture() }));
+            sign.position.set(0, 6.5, 73.3); scene.add(sign);
 
             // 警衛傳達室
-            const guard = new THREE.Mesh(new THREE.BoxGeometry(5, 3.5, 4), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
-            guard.position.set(13, 1.75, 73); scene.add(guard);
-            colliders.push({ minX: 10.5, maxX: 15.5, minZ: 71, maxZ: 75 });
+            addDetailedBuilding(13, 1.8, 69, 5, 3.6, 4, new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
 
-            // 2. 教學大樓合院群 (修澤蘭建築風格佈局)
-            addBuilding(0, 40, 52, 14, 12, buildingMat);
-            addBuilding(-30, 15, 12, 14, 45, buildingMat);
-            addBuilding(30, 15, 12, 14, 45, buildingMat);
+            // 2. 行政大樓前棟（橫貫中央穿堂）
+            addDetailedBuilding(0, 7.5, 52, 60, 15, 12, mainBuildingMat, true);
 
-            // 3. 內苑／榕園中庭綠地
-            const garden = new THREE.Mesh(new THREE.CylinderGeometry(10, 10, 0.4, 16), new THREE.MeshLambertMaterial({ color: 0x22c55e }));
-            garden.position.set(0, 0.2, 15); scene.add(garden);
-            addTree(0, 15, 2.3); addTree(-6, 12, 1.8); addTree(6, 17, 1.8);
+            // 3. 修澤蘭設計：四維樓與知行樓合院群 (日字型/雙口中庭)
+            // 西翼教學樓
+            addDetailedBuilding(-26, 7.5, 22, 10, 15, 48, mainBuildingMat, true);
+            // 東翼教學樓
+            addDetailedBuilding(26, 7.5, 22, 10, 15, 48, mainBuildingMat, true);
+            // 中後棟教室 (北側橫棟)
+            addDetailedBuilding(0, 7.5, -3, 62, 15, 10, mainBuildingMat, true);
 
-            // 4. 學生活動中心（體育館）
-            addBuilding(-50, -35, 30, 16, 40, new THREE.MeshLambertMaterial({ color: 0xf87171 }));
-            const roof = new THREE.Mesh(new THREE.CylinderGeometry(16, 16, 40, 8, 1, false, 0, Math.PI), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
-            roof.position.set(-50, 16, -35); roof.rotation.x = Math.PI / 2;
-            scene.add(roof);
+            // 4. 內苑／榕園核心景觀庭園 (位於前棟與中棟之間的內院)
+            const gardenCourt = new THREE.Mesh(new THREE.CylinderGeometry(11, 11, 0.4, 16), new THREE.MeshLambertMaterial({ color: 0x15803d }));
+            gardenCourt.position.set(0, 0.2, 25); scene.add(gardenCourt);
+            addBanyanTree(0, 25, 2.6);
+            addBanyanTree(-7, 21, 1.9);
+            addBanyanTree(7, 28, 1.9);
 
-            // 5. 200m PU 操場
-            const track = new THREE.Mesh(new THREE.PlaneGeometry(55, 65), new THREE.MeshLambertMaterial({ color: 0xef4444 }));
-            track.rotation.x = -Math.PI / 2; track.position.set(45, 0.05, -35); scene.add(track);
+            // 5. 西北側：學生活動中心 (體育館，興建於民國72年/近期拉皮翻新)
+            const gymMat = new THREE.MeshLambertMaterial({ map: createGymWallTexture() });
+            addDetailedBuilding(-48, 8, -35, 28, 16, 44, gymMat, false);
+            // 弧形挑高拱頂
+            const archRoof = new THREE.Mesh(
+                new THREE.CylinderGeometry(15, 15, 44, 16, 1, false, 0, Math.PI),
+                new THREE.MeshLambertMaterial({ color: 0x0284c7 })
+            );
+            archRoof.position.set(-48, 16, -35);
+            archRoof.rotation.x = Math.PI / 2;
+            scene.add(archRoof);
 
-            const innerGrass = new THREE.Mesh(new THREE.PlaneGeometry(35, 45), new THREE.MeshLambertMaterial({ color: 0x22c55e }));
-            innerGrass.rotation.x = -Math.PI / 2; innerGrass.position.set(45, 0.08, -35); scene.add(innerGrass);
+            // 6. 東側：200公尺標準 PU 操場 (衛星視圖上最顯眼的地標)
+            const trackGeo = new THREE.PlaneGeometry(54, 75);
+            const trackMesh = new THREE.Mesh(trackGeo, new THREE.MeshLambertMaterial({ map: createTrackTexture() }));
+            trackMesh.rotation.x = -Math.PI / 2;
+            trackMesh.position.set(45, 0.12, -22);
+            trackMesh.receiveShadow = true;
+            scene.add(trackMesh);
 
-            // 6. 戶外雙座籃球場
-            const court = new THREE.Mesh(new THREE.PlaneGeometry(28, 38), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
-            court.rotation.x = -Math.PI / 2; court.position.set(-10, 0.06, -50); scene.add(court);
-            addHoop(-10, -66); addHoop(-10, -34);
+            // 操場司令台看台 (位於操場西側，面向操場)
+            addDetailedBuilding(16, 2.5, -22, 4, 5, 16, new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+            const standRoof = new THREE.Mesh(new THREE.BoxGeometry(6, 0.5, 18), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
+            standRoof.position.set(16, 5.2, -22); scene.add(standRoof);
+
+            // 7. 戶外雙座壓克力籃球場 (位於活動中心與操場之間)
+            const bbCourt = new THREE.Mesh(new THREE.PlaneGeometry(28, 38), new THREE.MeshLambertMaterial({ color: 0x0369a1 }));
+            bbCourt.rotation.x = -Math.PI / 2;
+            bbCourt.position.set(-14, 0.1, -48);
+            scene.add(bbCourt);
+            createHoop(-14, -65); createHoop(-14, -31);
         }
 
-        function addBuilding(x, z, w, h, d, mat) {
-            const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
-            mesh.position.set(x, h/2, z);
-            mesh.castShadow = true; mesh.receiveShadow = true;
-            scene.add(mesh);
+        // 建立帶女兒牆與屋頂設備的真實校舍
+        function addDetailedBuilding(x, y, z, w, h, d, mat, addRoofDetails = false) {
+            const building = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+            building.position.set(x, y, z);
+            building.castShadow = true;
+            building.receiveShadow = true;
+            scene.add(building);
             colliders.push({ minX: x - w/2 - 0.4, maxX: x + w/2 + 0.4, minZ: z - d/2 - 0.4, maxZ: z + d/2 + 0.4 });
+
+            // 屋頂構造（模擬衛星圖上清晰可見的女兒牆、電梯機房與水塔）
+            if (addRoofDetails) {
+                // 女兒牆
+                const parapetMat = new THREE.MeshLambertMaterial({ color: 0x94a3b8 });
+                const parapet = new THREE.Mesh(new THREE.BoxGeometry(w, 0.8, d), parapetMat);
+                parapet.position.set(x, y + h/2 + 0.4, z);
+                scene.add(parapet);
+
+                // 電梯機房機樓
+                const elevatorBox = new THREE.Mesh(new THREE.BoxGeometry(4, 3, 4), parapetMat);
+                elevatorBox.position.set(x - w/4, y + h/2 + 1.5, z);
+                scene.add(elevatorBox);
+
+                // 不鏽鋼圓柱水塔
+                const tankMat = new THREE.MeshStandardMaterial({ color: 0xd1d5db, metalness: 0.8, roughness: 0.2 });
+                const tank = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 2.5, 12), tankMat);
+                tank.position.set(x + w/4, y + h/2 + 1.25, z);
+                scene.add(tank);
+            }
         }
 
-        function addTree(x, z, scale = 1) {
-            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3 * scale, 0.5 * scale, 3 * scale), new THREE.MeshLambertMaterial({ color: 0x78350f }));
+        function addBanyanTree(x, z, scale = 1) {
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.4 * scale, 0.7 * scale, 3 * scale), new THREE.MeshLambertMaterial({ color: 0x5a3825 }));
             trunk.position.set(x, 1.5 * scale, z); scene.add(trunk);
-            const leaves = new THREE.Mesh(new THREE.DodecahedronGeometry(2 * scale), new THREE.MeshLambertMaterial({ color: 0x15803d }));
+            const leaves = new THREE.Mesh(new THREE.SphereGeometry(2.4 * scale, 8, 8), new THREE.MeshLambertMaterial({ color: 0x166534 }));
             leaves.position.set(x, 3.8 * scale, z); scene.add(leaves);
         }
 
-        function addHoop(x, z) {
+        function createHoop(x, z) {
             const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 4), new THREE.MeshLambertMaterial({ color: 0xffffff }));
             pole.position.set(x, 2, z); scene.add(pole);
-            const board = new THREE.Mesh(new THREE.BoxGeometry(2, 1.2, 0.1), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+            const board = new THREE.Mesh(new THREE.BoxGeometry(2.2, 1.2, 0.1), new THREE.MeshLambertMaterial({ color: 0xffffff }));
             board.position.set(x, 3.5, z); scene.add(board);
         }
 
         function spawnBadges() {
-            const spots = [{ x: 0, z: 62 }, { x: 0, z: 15 }, { x: 45, z: -35 }, { x: -10, z: -50 }, { x: -50, z: -12 }];
+            // 五大標誌性收集點
+            const spots = [
+                { x: 0, z: 62, title: "明德路正門" },
+                { x: 0, z: 25, title: "中庭榕園" },
+                { x: 45, z: -22, title: "200M操場" },
+                { x: 16, z: -22, title: "操場司令台" },
+                { x: -48, z: -15, title: "學生活動中心" }
+            ];
             const starGeo = new THREE.OctahedronGeometry(0.8, 0);
             const starMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, emissive: 0xd97706, roughness: 0.2, metalness: 0.8 });
 
@@ -342,15 +478,13 @@
             });
         }
 
-        /* ================= 滑鼠指標鎖定控制 ================= */
+        /* ================= 視角與控制器 ================= */
         function setupControls() {
             const overlay = document.getElementById('overlay');
-            const startBtn = document.getElementById('start-game-btn');
+            const startBtn = document.getElementById('start-btn');
             const fsBtn = document.getElementById('fullscreen-btn');
 
-            startBtn.addEventListener('click', () => {
-                document.body.requestPointerLock();
-            });
+            startBtn.addEventListener('click', () => { document.body.requestPointerLock(); });
 
             document.addEventListener('pointerlockchange', () => {
                 if (document.pointerLockElement === document.body) {
@@ -370,7 +504,6 @@
                 pitchObject.rotation.x = Math.max(-Math.PI / 2.2, Math.min(Math.PI / 2.2, pitchObject.rotation.x));
             });
 
-            // 鍵盤移動
             document.addEventListener('keydown', (e) => {
                 if (!isPlaying) return;
                 switch(e.code) {
@@ -393,13 +526,9 @@
                 }
             });
 
-            // 全螢幕切換按鈕
             fsBtn.addEventListener('click', () => {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen();
-                } else {
-                    document.exitFullscreen();
-                }
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen();
+                else document.exitFullscreen();
             });
         }
 
@@ -416,15 +545,21 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
         }
 
-        // 小地圖雷達
+        // 衛星小地圖
         const miniCanvas = document.getElementById('minimap');
         const mCtx = miniCanvas.getContext('2d');
         function drawMinimap() {
-            mCtx.clearRect(0, 0, 150, 150);
-            const scale = 0.8; const cx = 75, cy = 75;
-            mCtx.fillStyle = '#0f172a'; mCtx.fillRect(0, 0, 150, 150);
+            mCtx.clearRect(0, 0, 160, 160);
+            const scale = 0.85; const cx = 80, cy = 80;
+            mCtx.fillStyle = '#0f172a'; mCtx.fillRect(0, 0, 160, 160);
 
-            // 建築
+            // 操場跑道圖形
+            mCtx.fillStyle = '#b91c1c';
+            mCtx.beginPath();
+            mCtx.roundRect(cx + (45-25)*scale, cy + (-22-35)*scale, 50*scale, 70*scale, 18);
+            mCtx.fill();
+
+            // 建築投影
             mCtx.fillStyle = '#64748b';
             colliders.forEach(b => {
                 const bx = cx + (b.minX + (b.maxX - b.minX)/2) * scale;
@@ -440,7 +575,7 @@
                 }
             });
 
-            // 玩家座標與視角指標
+            // 玩家
             const px = cx + yawObject.position.x * scale;
             const pz = cy + yawObject.position.z * scale;
             mCtx.fillStyle = '#38bdf8';
@@ -485,11 +620,10 @@
                     velocity.y = 0; yawObject.position.y = 1.7; canJump = true;
                 }
 
-                // 寶石自轉與拾取
+                // 寶石自轉與拾取判定
                 badges.forEach((b) => {
                     if (!b.collected) {
                         b.mesh.rotation.y += 2 * delta;
-                        b.mesh.rotation.x += 1 * delta;
                         if (yawObject.position.distanceTo(b.mesh.position) < 2.2) {
                             b.collected = true;
                             scene.remove(b.mesh);
